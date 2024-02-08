@@ -1,0 +1,8 @@
+kfp pipeline upload -p mnist-pipeline mnist_pipeline.yaml
+
+# kfp experiment create <experiment_name>
+kfp experiment create MNIST_Model
+
+# kfp run create -e <experiment_name> -r <run_name> -p <pipeline_id> -v <version_id>
+# kfp run create -e <experiment_name> -r <run_name> -n <pipeline_name> -v <version_id>
+kfp run create -e MNIST_Model -r mnist_model_run_01 -p 2bac275c-ccbc-4299-bcc5-f902af98f2d8 -v mnist-pipeline
