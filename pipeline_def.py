@@ -1,24 +1,35 @@
 from kfp.dsl import pipeline
 import kfp.compiler as compiler
-from data_processing import preprocess_data
-from model_evaluation import evaluate_model
-from model_training import train_model
+from data_loading import load_dataset
+from data_processing import preprocessing
+from model_building import model_building
+from model_training import model_training
 
 @pipeline(
-  name='mnist-classification-pipeline',
-  description='A pipeline that processes MNIST data and trains a model.'
+    name='mnist-classifier-dev',
+    description='Detect digits'
 )
-def mnist_pipeline():
-    preprocess_task = preprocess_data()
-    train_task = train_model(
-        training_data=preprocess_task.outputs['training_data_output']
+def mnist_pipeline(hyperparameters: dict):
+    load_task = load_dataset()
+    preprocess_task = preprocessing(
+        x_train_artifact = load_task.outputs["x_train_artifact"],
+        x_test_artifact = load_task.outputs["x_test_artifact"]
     )
-    evaluate_task = evaluate_model(
-        model_input=train_task.outputs['model_output']
+
+    model_building_task = model_building()
+
+    training_task = model_training(
+        ml_model = model_building_task.outputs["ml_model"],
+        x_train_processed = preprocess_task.outputs["x_train_processed"],
+        x_test_processed = preprocess_task.outputs["x_test_processed"],
+        y_train_artifact = load_task.outputs["y_train_artifact"],
+        y_test_artifact = load_task.outputs["y_test_artifact"],
+        hyperparameters = hyperparameters
     )
+
     
 # Compile the pipeline
 compiler.Compiler().compile(
     pipeline_func=mnist_pipeline,
-    package_path='../pipeline/mnist_pipeline.yaml'
+    package_path='output/mnist_pipeline.yaml'
 )
